@@ -32,7 +32,7 @@ pthread_mutex_t mutex;
 
 typedef struct guest {
 	char nickname[MAX_LEN];
-	//char password[MAX_LEN];
+	char password[MAX_LEN];
 	char history[CHATDATA][CHATDATA] ;
 	int last_mess;
 	SOCKET socket;
@@ -54,6 +54,8 @@ char start_mess[] = "View dialog with ->";
 char    CODE200[] = "Sorry No More Connection\n";
 char	neUser[] = "This is Not User\n";
 char	denied[] = "Sorry, assess denied\n";
+char wrong_pass[] = "Wrong password. Try again\n";
+char welcome[] = "Access is allowed\n";
 char update[] = "reload";
 char clear_history[] = "Sorry, no previous messages. Start chattering right now\n";
 char notification[] = " send you a message";
@@ -74,7 +76,8 @@ int main(int argc, char* argv[])
 	int    len;
 	int    i, j, n;
 	int    res;
-	char nickname[20];
+	char nickname[MAX_LEN];
+	char password[MAX_LEN];
 	char roomNum[3]; int r_Num;
 	if (pthread_mutex_init(&mutex, NULL) != 0) {
 		printf("Can not create mutex\n");
@@ -109,17 +112,35 @@ int main(int argc, char* argv[])
 
         memset(nickname, 0, sizeof(nickname));//clean func
 		recv(c_socket, nickname, sizeof(nickname), 0);// write name
+		
+		memset(password, 0, sizeof(password));
+		recv(c_socket,password, sizeof(password), 0);
+		printf("%s %s", nickname, password);
+		int res;
+		int res_name = find_mate_box(nickname);
+		printf("%d", res_name);
+		if (res_name  == -1) {
+		    res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
+		}
+		else {
+			while (!strstr(password, list_c[res_name][0].password)) {
+				send(c_socket, wrong_pass, sizeof(wrong_pass), 0);//welcome mess
+				memset(password, 0, sizeof(password));
+				recv(c_socket, password, sizeof(password), 0);
+			}
+			list_c[res][0].socket = c_socket;
+		}
 		//здесь нужно написать функцию сравнения по именам и если клиент существует сменить сокет
 		//если клиента нет добавить (функция find mate в помощь для определение есть ли клиент
 	
-		int res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
+		//int res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
 
 		if (res < 0) { //
 			send(c_socket, denied, strlen(CODE200), 0);
 			closesocket(c_socket);
 		}
 		else {
-			send(c_socket, greeting, sizeof(greeting), 0);//welcome mess
+			send(c_socket,welcome , sizeof(welcome), 0);//welcome mess
 			pthread_create(&thread, NULL, do_chat, (void*)(cli_count - 1));
 		}
 	}
@@ -139,9 +160,15 @@ void* print_cleints(SOCKET soket_client) {
 int * find_mate_box(char* name) {
 	//return i if nick_name exist 
 	//return -1 if no match 
-	char* istr;
-	istr = strtok(name, ":");
-	istr = strtok(NULL, "\0");
+	printf("\n%s\n", name);
+	char* istr = name ;
+	
+	
+	if (strstr(name,":") ){
+        istr = strtok(name, ":");
+		istr = strtok(NULL, "\0");
+	}
+    printf("istr %s", list_c[0][0].nickname);
 	for (int i = 0; i < MAX_CLIENT; i++) {
 		if (strstr(istr, list_c[i][0].nickname)) {
 			return i;
