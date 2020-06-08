@@ -1,4 +1,4 @@
-/#include "pch.h"
+
 #define _CRT_SECURE_NO_WARNINGS
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
@@ -124,6 +124,7 @@ int main(int argc, char* argv[])
 		else {
 			printf(" name = %s, passowrd = %s, cli_cpount = %d\n", nickname, password, cli_count);
 			send(c_socket, greeting, sizeof(greeting), 0);//welcome mess
+			Sleep(100);
 			pthread_create(&thread, NULL, do_chat, (void*)(cli_count - 1));
 		}
 	}
@@ -216,11 +217,11 @@ void* do_chat(void* arg)
 							strcat(buffer, "===\n");
 
 							send(c_socket, buffer, sizeof(buffer), 0);
-							Sleep(100);//because we need time to clean console 
+							//Sleep(100);//because we need time to clean console 
 							memset(chatData, 0, sizeof(chatData));
 
 							print_history(i, room);//print previous mess
-							Sleep(100);
+							//Sleep(100);
 							send(c_socket, end, sizeof(end), 0);
 							n = recv(c_socket, chatData, sizeof(chatData), 0);
 
@@ -294,8 +295,5 @@ int pushClient(int roomNum, SOCKET c_socket, char* nickname) {
 	}
 	return i; // list_c index.
 }
-
-
-
 
 
