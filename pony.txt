@@ -30,7 +30,7 @@ void printPony()
 	for (i = 0; i < HEIGHT; i++) {
 		COORD coord = {X, i};
 		SetConsoleCursorPosition(nConsole, coord);
-		puts(pony[i]);
+		prinf("%s",pony[i]);
 	}
 	COORD coord = {0, 0};
 	SetConsoleCursorPosition(nConsole, coord);
