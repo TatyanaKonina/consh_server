@@ -1,0 +1,57 @@
+void* chat_bot(void* arg)
+{
+    char bot_buf[MAX_CLIENT][MAX_CLIENT] ;
+    char chatData[CHATDATA];
+    int n = 0, pointer = 0, flag = 0;
+	char buf[CHATDATA];
+	char file_name[] = "bot_phrase.txt";
+	int word_line = words_num_in_file(file_name);
+	char** data = read_data(file_name, word_line);
+	int random = 0;
+    srand(time(0));
+    SOCKET c_socket = *(SOCKET*)arg;        // bot socket
+    while (1) {
+        memset(chatData, 0, sizeof(chatData));
+        if ((n = recv(c_socket, chatData, sizeof(chatData),0)) > 0) {
+            if (strstr(chatData, dialog) != NULL) {
+				memset(chatData, '\0', sizeof(chatData));
+				memset(buf, '\0', sizeof(buf));
+
+				sprintf(buf, data[rand() % word_line]);
+
+				str(buf, CHATDATA);
+
+				sprintf(chatData, "%s: %s", nickname, buf);
+				send(c_socket, chatData, strlen(chatData),0);
+				Sleep(1000);
+				send(c_socket, escape, strlen(escape),0);
+			}
+			else {
+				if (strstr(chatData,list)) {// client want to update screen
+                system("cls");
+				}
+				if (strstr(chatData, list)) {
+					pointer = 0;
+					flag = 1;
+				}
+				//printPony();
+				printf("%s", chatData);
+				if (flag) {
+					strcpy(bot_buf[pointer++], chatData);
+				}
+				if (strstr(chatData, /*start_mess*/"aaa")) { //delete aaa
+					random = 1 + rand() % (pointer-1);
+					send(c_socket, bot_buf[random], sizeof(bot_buf[random]), 0);
+					Sleep(3000);
+				}
+				if (strstr(chatData, notification)) {
+					Sleep(4000);
+					for (int i = 0; i < strlen(chatData); i++) { //clean notification
+						printf("\b \b");
+					}
+					send(c_socket, update, sizeof(update), 0);
+				}
+			}
+        }
+    }
+}
