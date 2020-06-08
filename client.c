@@ -1,4 +1,3 @@
-
 #pragma comment(lib, "ws2_32.lib")
 
 
@@ -19,13 +18,37 @@
 #define NICK_LEN 20
 #define MAX_CLIENT 5
 
+#define MID 177
+#define LIG 178
+#define DAR 176
+#define RIG 221
+#define LEF 222
+#define DOW 220
+#define UP 223
+#define X 96
+#define HEIGHT 12
+#define WIDTH 23
+
+const char pony[HEIGHT][WIDTH] = { {MID,MID,MID,MID,LIG,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,DAR,DAR,DAR,'\0'},
+                            {MID,MID,MID,LIG,LIG,LIG,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,MID,DAR,'\0'},
+                            {MID,MID,LIG,RIG,LEF,LIG,MID,LIG,LIG,LIG,LIG,LIG,LIG,MID,MID,MID,MID,MID,MID,MID,MID,MID,'\0'},
+                            {MID,MID,LIG,LIG,LEF,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,MID,MID,MID,MID,MID,MID,MID,'\0'},
+                            {MID,MID,MID,MID,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,DAR,DAR,DAR,MID,MID,MID,'\0'},
+                            {MID,MID,MID,MID,MID,MID,LIG,LIG,DOW,DOW,' ',' ',' ',LIG,LIG,LIG,LIG,DAR,MID,MID,MID,DAR,'\0'},
+                            {MID,MID,MID,MID,MID,MID,LIG,LEF,UP,' ',' ',' ',' ',LEF,LIG,LIG,LIG,DAR,MID,MID,MID,DAR,'\0'},
+                            {MID,MID,MID,MID,MID,LIG,LIG,' ',' ',' ',UP,' ',LEF,LIG,LIG,LIG,DAR,DAR,MID,DAR,DAR,DAR,'\0'},
+                            {MID,MID,MID,MID,MID,MID,MID,LIG,DOW,DOW,DOW,DOW,LIG,LIG,LIG,LIG,DAR,DAR,MID,MID,DAR,DAR,'\0'},
+                            {MID,MID,MID,MID,MID,MID,MID,MID,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,LIG,DAR,DAR,DAR,DAR,DAR,'\0'},
+                            {MID,MID,MID,MID,MID,MID,MID,LIG,LIG,LIG,LIG,LIG,LIG,RIG,UP,LIG,DAR,DAR,DAR,DAR,DAR,DAR,'\0'},
+                            {MID,MID,MID,MID,MID,MID,LIG,LIG,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,'\0'} };
+
 void* do_send_chat(void* arg);
 
 void* do_receive_chat(void* arg);
 char** read_data(char* file_name, int line_num);
 void str(char* arr, int length);
 int words_num_in_file(char* file_name);
-void* chat_bot(void* arg);
+void printPony();
 
 pthread_t thread_1, thread_2;
 char first_mess[] = "Hello, dear Hacker! Who do you want to be today?\n1/Im bot.\n2.I aM nOt A bOt TrUsT mE\n";
@@ -73,6 +96,7 @@ int main(int argc, char* argv[])
     memset(password, 0, sizeof(password));
     char file_name[] = "bot_names.txt";
     char passwords[] = "bot_passwords.txt";
+    printPony();
 
     printf(greeting);// welcome mess
 
@@ -124,6 +148,7 @@ void* do_send_chat(void* arg) {
     //int n;
     SOCKET c_socket = *(SOCKET*)arg;
     while (1) {
+        
         memset(chatData, '\0', sizeof(chatData));
         memset(buf, '\0', sizeof(buf));
         if (flag_bot == 1) {
@@ -171,9 +196,12 @@ void* do_receive_chat(void* arg)
             if (strstr(chatData, dialog) != NULL || strstr(chatData, list)) {// client want to update screen
                 system("cls");
                 Sleep(100);
+                printPony();
             }
+            
             printf("%s", chatData);
-            //hourse head
+           
+            
             if (strstr(chatData, notification)) {
                 Sleep(3000);
                 for (int i = 0; i < strlen(chatData); i++) {//clean notification
@@ -181,6 +209,7 @@ void* do_receive_chat(void* arg)
                 }
                 send(c_socket, update, sizeof(update), 0);
             }
+            //printPony();
         }
     }
 }
@@ -231,4 +260,19 @@ int words_num_in_file(char* file_name) {
     fclose(file);
 
     return line_num;
+}
+void printPony()
+{
+    HANDLE nConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    int i = 0;
+
+    for (i = 0; i < 12; i++) {
+        COORD coord = { 95, i };
+        SetConsoleCursorPosition(nConsole, coord);
+        printf("%s",(pony[i]));
+    }
+    COORD coord = { 0, 0 };
+    SetConsoleCursorPosition(nConsole, coord);
+
+    return;
 }
