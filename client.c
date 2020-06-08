@@ -39,9 +39,9 @@ char update[] = "reload";
 char    escape[] = "exit";
 char start_mess[] = "View dialog with ->";
 char end[] = "--------------------------------------------";
-char    nickname[NICK_LEN];
+const char    nickname[NICK_LEN];
 char password[NICK_LEN];
-int flag = 0;
+int flag_bot = 0;
 
 int main(int argc, char* argv[])
 {
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
         data = read_data(passwords, word_line);
         random = rand() % (word_line - 1);
         strcpy(password, data[random]);
-        flag = 1;
+        flag_bot = 1;
     }
     else {
         printf(write_name);
@@ -118,10 +118,12 @@ int main(int argc, char* argv[])
         fflush(stdin);
     }
     //printf("%s %s", password, nickname);
+    str(nickname, strlen(nickname));
+    str(password, strlen(password));
 
     send(c_socket, nickname, strlen(nickname), 0);//send mess and password
     send(c_socket, password, strlen(password), 0);
-    if (flag) {
+    if (flag_bot) {
         pthread_create(&thread_2, NULL, chat_bot, (void*)&c_socket);
     }
     else {
@@ -147,7 +149,7 @@ void* do_send_chat(void* arg) {
         fgets(buf, CHATDATA, stdin);
         
         fflush(stdin);
-        Sleep(100);
+        //Sleep(100);
         //scanf("%s", buf);
 
         str(buf, CHATDATA);
@@ -156,7 +158,7 @@ void* do_send_chat(void* arg) {
         send(c_socket, chatData, strlen(chatData), 0);
 
     }
-    flag = 1;
+    //flag = 1;
 }
 void* do_receive_chat(void* arg)
 {
@@ -262,7 +264,7 @@ void* chat_bot(void* arg)
                 Sleep(4000);
                 sprintf(chatData, "%s: %s", nickname, buf);
                 send(c_socket, chatData, strlen(chatData), 0);
-                
+                Sleep(1000);
                 send(c_socket, escape, strlen(escape), 0);
             }
             else {
@@ -286,7 +288,7 @@ void* chat_bot(void* arg)
                 //printPony();
                 
                 
-                if (strstr(chatData, notification)) {
+                if (strstr(chatData, notification) && flag_bot == 0) {
                     Sleep(4000);
                     for (int i = 0; i < strlen(chatData); i++) { //clean notification
                         printf("\b \b");
