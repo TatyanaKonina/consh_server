@@ -1,6 +1,5 @@
 #pragma comment(lib, "ws2_32.lib")
 
-
 #define _CRT_SECURE_NO_WARNINGS
 #define HAVE_STRUCT_TIMESPEC
 #include <winsock.h>
@@ -42,7 +41,7 @@ const char pony[HEIGHT][WIDTH] = { {MID,MID,MID,MID,LIG,MID,MID,MID,MID,MID,MID,
                             {MID,MID,MID,MID,MID,MID,MID,LIG,LIG,LIG,LIG,LIG,LIG,RIG,UP,LIG,DAR,DAR,DAR,DAR,DAR,DAR,'\0'},
                             {MID,MID,MID,MID,MID,MID,LIG,LIG,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,DAR,'\0'} };
 
-void* do_send_chat(void* arg);
+void* doSendChat(void* arg);
 
 void* do_receive_chat(void* arg);
 char** read_data(char* file_name, int line_num);
@@ -51,11 +50,6 @@ int words_num_in_file(char* file_name);
 void printPony();
 
 pthread_t thread_1, thread_2;
-const char dialog[CHATDATA] = "===Dialog with ";
-const char list[] = "Here list of our clients";
-const char notification[] = " send you a message";
-const char update[] = "reload";
-const char escape[] = "exit";
 char nickname[NICK_LEN];
 int flag_bot = 0;
 
@@ -93,7 +87,7 @@ int main(int argc, char* argv[])
 
     printf("=== WELCOME TO MY LIITLE SERVER ===\n");
 
-    printf("Hello, dear Hacker! Who do you want to be today?\n1/Im bot.\n2.I aM nOt A bOt TrUsT mE\n");
+    printf("Hello, dear Hacker! Who do you want to be today?\n1.Im bot.\n2.I aM nOt A bOt TrUsT mE\n");
 
     fgets(chatData, CHATDATA, stdin);
     fflush(stdin);
@@ -128,16 +122,17 @@ int main(int argc, char* argv[])
     send(c_socket, password, strlen(password), 0);
 
     pthread_create(&thread_2, NULL, do_receive_chat, (void*)&c_socket);
-    pthread_create(&thread_1, NULL, do_send_chat, (void*)&c_socket);
+    pthread_create(&thread_1, NULL, doSendChat, (void*)&c_socket);
   
     pthread_join(thread_1, (void**)NULL);
     pthread_join(thread_2, (void**)NULL);
     closesocket(c_socket);
 }
 
-void* do_send_chat(void* arg) {
+void* doSendChat(void* arg) {
     char chatData[CHATDATA];
     char buf[CHATDATA];
+	char escape[] = "exit";
     //int n;
     SOCKET c_socket = *(SOCKET*)arg;
     while (1) {
@@ -182,6 +177,10 @@ void* do_receive_chat(void* arg)
 {
     char    chatData[CHATDATA];
     int    n;
+	char dialog[CHATDATA] = "===Dialog with ";
+	char list[] = "Here list of our clients";
+	char notification[] = " send you a message";
+	char update[] = "reload";
     SOCKET   c_socket = *(SOCKET*)arg;        // client socket
     while (1) {
         memset(chatData, 0, sizeof(chatData));
