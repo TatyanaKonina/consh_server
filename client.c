@@ -16,6 +16,7 @@
 #define IPADDR "127.0.0.1"
 #define PORT 9000
 #define NICK_LEN 20
+#define MAX_CLIENT 5
 
 void* do_send_chat(void* arg);
 
@@ -23,17 +24,21 @@ void* do_receive_chat(void* arg);
 char** read_data(char* file_name, int line_num);
 void str(char* arr, int length);
 int words_num_in_file(char* file_name);
+void* chat_bot(void* arg);
 
 pthread_t thread_1, thread_2;
 char first_mess[] = "Hello, dear Hacker! Who do you want to be today?\n1/Im bot.\n2.I aM nOt A bOt TrUsT mE\n";
+char one_client[] = "===Your are alone, don't worry, please,wait===\n";
 char write_name[] = "Input name: ";
 char dialog[CHATDATA] = "===Dialog with ";
-char list[] = "===Here list of our clients:===\n";
+char list[] = "Here list of our clients";
 char    greeting[] = "=== WELCOME TO MY LIITLE SERVER ===\n";
 char notification[] = " send you a message";
 char write_pass[] = "Write password:";
 char update[] = "reload";
 char    escape[] = "exit";
+char start_mess[] = "View dialog with ->";
+char end[] = "--------------------------------------------";
 char    nickname[NICK_LEN];
 char password[NICK_LEN];
 int flag = 0;
@@ -116,12 +121,13 @@ int main(int argc, char* argv[])
 
     send(c_socket, nickname, strlen(nickname), 0);//send mess and password
     send(c_socket, password, strlen(password), 0);
-   /* if (flag) {
-        pthread_create(&thread_2, NULL, do_receive_chat, (void*)&c_socket);
+    if (flag) {
+        pthread_create(&thread_2, NULL, chat_bot, (void*)&c_socket);
     }
-    else*/
-    pthread_create(&thread_2, NULL, do_receive_chat, (void*)&c_socket);
-    pthread_create(&thread_1, NULL, do_send_chat, (void*)&c_socket);
+    else {
+        pthread_create(&thread_2, NULL, do_receive_chat, (void*)&c_socket);
+        pthread_create(&thread_1, NULL, do_send_chat, (void*)&c_socket);
+    }
 
     pthread_join(thread_1, (void**)NULL);
     pthread_join(thread_2, (void**)NULL);
@@ -222,4 +228,84 @@ int words_num_in_file(char* file_name) {
     fclose(file);
 
     return line_num;
+}
+
+void* chat_bot(void* arg)
+{
+
+    char bot_buf[MAX_CLIENT][CHATDATA];
+    char chatData[CHATDATA];
+    int n = 0, pointer = 0, flag = 0;
+    char buf[CHATDATA];
+    char file_name[] = "bot_phrase.txt";
+    int word_line = words_num_in_file(file_name);
+    char** data = read_data(file_name, word_line);
+    int random = 0;
+    srand(time(0));
+    SOCKET c_socket = *(SOCKET*)arg;        // bot socket
+    while (1) {
+        memset(chatData, 0, sizeof(chatData));
+        
+        if ((n = recv(c_socket, chatData, sizeof(chatData), 0)) > 0) {
+ 
+            //printf("1 = %s\n", chatData);
+            if (strstr(chatData, end) != NULL) {
+                printf("%s", chatData);
+                pointer = 0;
+                flag = 0;
+                memset(chatData, '\0', sizeof(chatData));
+                memset(buf, '\0', sizeof(buf));
+
+                sprintf(buf, data[rand() % word_line]);
+
+                str(buf, CHATDATA);
+                Sleep(4000);
+                sprintf(chatData, "%s: %s", nickname, buf);
+                send(c_socket, chatData, strlen(chatData), 0);
+                
+                send(c_socket, escape, strlen(escape), 0);
+            }
+            else {
+                //Sleep(2000);
+                if (strstr(chatData, list) || strstr(chatData, dialog)) {// client want to update screen
+                    printf("\ncleen\n");
+                    flag = 0;
+                    //system("cls");
+                    Sleep(100);
+                }
+                printf("%s", chatData);
+                if (flag && !strstr(chatData, start_mess) && !strstr(chatData,one_client )) {
+                    str(chatData, strlen(chatData));
+                   // printf("ok %s",chatData);
+                    strcpy(bot_buf[pointer++], chatData);
+                }
+                if (strstr(chatData, list)) {
+                    pointer = 0;
+                    flag = 1;
+                }
+                //printPony();
+                
+                
+                if (strstr(chatData, notification)) {
+                    Sleep(4000);
+                    for (int i = 0; i < strlen(chatData); i++) { //clean notification
+                        printf("\b \b");
+                    }
+                    send(c_socket, update, sizeof(update), 0);
+                }
+
+                if (strstr(chatData, start_mess)) { //delete aaa
+                    //printf("%s",bot_buf[0]);
+                    memset(chatData, '\0', sizeof(chatData));
+                    random = rand() % (pointer);
+                    //printf(" p= %d %d", pointer,random);
+                    Sleep(3000);
+                    sprintf(chatData, "%s: %s", nickname, bot_buf[random]);
+                    printf("%s", bot_buf[random]);
+                    send(c_socket, chatData, sizeof(chatData), 0);
+                }
+                
+            }
+        }
+    }
 }
