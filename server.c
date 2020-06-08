@@ -15,7 +15,7 @@ int pushClient(int roomNum, SOCKET c_socket, char* nickname);
 
 void* print_cleints(SOCKET soket_client);
 
-int * find_mate_box(char* name);
+void* find_mate_box(char* name);
 
 void str(char* arr, int length);
 
@@ -33,7 +33,7 @@ pthread_mutex_t mutex;
 typedef struct guest {
 	char nickname[MAX_LEN];
 	char password[MAX_LEN];
-	char history[CHATDATA][CHATDATA] ;
+	char history[CHATDATA][CHATDATA];
 	int last_mess;
 	SOCKET socket;
 } guest;
@@ -49,16 +49,14 @@ guest list_c[MAX_CLIENT][MAX_CLIENT];
 
 char dialog[CHATDATA] = "===Dialog with ";
 char    escape[] = "exit";
-char    greeting[] = "=== WELCOME TO MY LIITLE SERVER ===\n";
+char    greeting[] = "=== WELCOME TO THE CHATROOM ===\n";
 char start_mess[] = "View dialog with ->";
 char    CODE200[] = "Sorry No More Connection\n";
 char	neUser[] = "This is Not User\n";
 char	denied[] = "Sorry, assess denied\n";
-char wrong_pass[] = "Wrong password. Try again\n";
-char welcome[] = "Access is allowed\n";
 char update[] = "reload";
 char clear_history[] = "Sorry, no previous messages. Start chattering right now\n";
-char notification[] = " send you a message";
+char notification[] = " send you a message\n";
 char one_client[] = "===Your are alone, don't worry, please,wait===\n";
 char list[] = "===Here list of our clients:===\n";
 
@@ -76,7 +74,7 @@ int main(int argc, char* argv[])
 	int    len;
 	int    i, j, n;
 	int    res;
-	char nickname[MAX_LEN];
+	char nickname[20];
 	char password[MAX_LEN];
 	char roomNum[3]; int r_Num;
 	if (pthread_mutex_init(&mutex, NULL) != 0) {
@@ -88,7 +86,7 @@ int main(int argc, char* argv[])
 	localaddr.sin_addr.S_un.S_addr = htonl(INADDR_ANY);
 	localaddr.sin_family = AF_INET;
 	localaddr.sin_port = htons(PORT);//port number is for example, must be more than 1024
-;
+	;
 	if (bind(s_socket, (struct sockaddr*) & localaddr, sizeof(localaddr)) == SOCKET_ERROR) {
 		printf("Can not Bind\n");
 		return -1;
@@ -110,37 +108,20 @@ int main(int argc, char* argv[])
 		c_socket = accept(s_socket, (struct sockaddr*) & clientaddr, &len);
 		cli_count++;
 
-        memset(nickname, 0, sizeof(nickname));//clean func
+		memset(nickname, 0, sizeof(nickname));//clean func
 		recv(c_socket, nickname, sizeof(nickname), 0);// write name
-		
-		memset(password, 0, sizeof(password));
-		recv(c_socket,password, sizeof(password), 0);
-		printf("%s %s", nickname, password);
-		int res;
-		int res_name = find_mate_box(nickname);
-		printf("%d", res_name);
-		if (res_name  == -1) {
-		    res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
-		}
-		else {
-			while (!strstr(password, list_c[res_name][0].password)) {
-				send(c_socket, wrong_pass, sizeof(wrong_pass), 0);//welcome mess
-				memset(password, 0, sizeof(password));
-				recv(c_socket, password, sizeof(password), 0);
-			}
-			list_c[res][0].socket = c_socket;
-		}
-		//здесь нужно написать функцию сравнения по именам и если клиент существует сменить сокет
-		//если клиента нет добавить (функция find mate в помощь для определение есть ли клиент
-	
-		//int res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
 
+		memset(password, 0, sizeof(password));
+		recv(c_socket, password, sizeof(password), 0);
+		printf("%s %s\n", nickname, password);
+
+		int res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
 		if (res < 0) { //
 			send(c_socket, denied, strlen(CODE200), 0);
 			closesocket(c_socket);
 		}
 		else {
-			send(c_socket,welcome , sizeof(welcome), 0);//welcome mess
+			send(c_socket, greeting, sizeof(greeting), 0);//welcome mess
 			pthread_create(&thread, NULL, do_chat, (void*)(cli_count - 1));
 		}
 	}
@@ -149,7 +130,7 @@ int main(int argc, char* argv[])
 void* print_cleints(SOCKET soket_client) {
 	char mess[CHATDATA];
 	for (int i = 0; i < MAX_CLIENT; i++) {
-		if (soket_client != list_c[i][0].socket && list_c[i][0].socket != INVALID_SOCK ) {//print all except client
+		if (soket_client != list_c[i][0].socket && list_c[i][0].socket != INVALID_SOCK) {//print all except client
 			strcpy(mess, list_c[i][0].nickname);
 			strcat(mess, "\n");
 			send(soket_client, mess, sizeof(mess), 0);
@@ -157,18 +138,13 @@ void* print_cleints(SOCKET soket_client) {
 	}
 }
 
-int * find_mate_box(char* name) {
+void* find_mate_box(char* name) {
 	//return i if nick_name exist 
 	//return -1 if no match 
-	printf("\n%s\n", name);
-	char* istr = name ;
-	
-	
-	if (strstr(name,":") ){
-        istr = strtok(name, ":");
-		istr = strtok(NULL, "\0");
-	}
-    printf("istr %s", list_c[0][0].nickname);
+	char* istr;
+	istr = strtok(name, ":");
+	istr = strtok(NULL, "\0");
+	printf("%s %s",name, istr);
 	for (int i = 0; i < MAX_CLIENT; i++) {
 		if (strstr(istr, list_c[i][0].nickname)) {
 			return i;
@@ -177,7 +153,7 @@ int * find_mate_box(char* name) {
 	return -1;
 }
 
-void* print_history(int room_mate,int room_client) {
+void* print_history(int room_mate, int room_client) {
 
 	int lst_mess = list_c[room_client][room_mate].last_mess;
 	if (lst_mess == 0) {
@@ -188,7 +164,7 @@ void* print_history(int room_mate,int room_client) {
 	}
 }
 
-void str (char* arr, int length) {
+void str(char* arr, int length) {
 	int i;
 	for (i = 0; i < length; i++) { // trim \n
 		if (arr[i] == '\n') {
@@ -201,14 +177,14 @@ void str (char* arr, int length) {
 void* do_chat(void* arg)
 {
 	int room = (int)arg;
-	
+
 	SOCKET c_socket = list_c[room][0].socket;
-	
-	char mate_name[MAX_LEN];	
+
+	char mate_name[CHATDATA];
 	char chatData[CHATDATA];
 	char buffer[CHATDATA];
 
-	int i = 0,j = 0, n = 0;
+	int i = 0, j = 0, n = 0;
 	while (1) {
 		if (cli_count != 1) {
 			memset(mate_name, 0, sizeof(mate_name));
@@ -219,7 +195,7 @@ void* do_chat(void* arg)
 			send(c_socket, start_mess, sizeof(start_mess), 0);//send "view dialog with "
 			recv(c_socket, mate_name, sizeof(mate_name), 0);//recv name
 			if (strstr(mate_name, escape) == NULL) {// if user do not want to leave
-				
+
 				int mate_num_box = find_mate_box(mate_name);// res = number of mate_box
 
 				if (mate_num_box >= 0) {//if we found mate
@@ -236,20 +212,20 @@ void* do_chat(void* arg)
 							strcpy(buffer, dialog);
 							strcat(buffer, list_c[mate_num_box][0].nickname);
 							strcat(buffer, "===\n");
-							
+
 							send(c_socket, buffer, sizeof(buffer), 0);
-                            Sleep(100);//because we need time to clean console 
+							Sleep(100);//because we need time to clean console 
 							memset(chatData, 0, sizeof(chatData));
-                  
+
 							print_history(i, room);//print previous mess
 							n = recv(c_socket, chatData, sizeof(chatData), 0);
-                            
+
 							//3 options
-							
+
 							if (strstr(chatData, escape)) {//if user want to leave
 								break;
 							}
-							else if (strstr(chatData,update)) {
+							else if (strstr(chatData, update)) {
 								continue;
 							}
 							else {// if user send a mess
@@ -282,7 +258,7 @@ void* do_chat(void* arg)
 				}
 			}
 			else {
-                send(c_socket, escape, sizeof(escape), 0);
+				send(c_socket, escape, sizeof(escape), 0);
 				closesocket(c_socket);
 				break;
 			}
@@ -294,7 +270,7 @@ void* do_chat(void* arg)
 	}
 }
 
-int pushClient(int roomNum, SOCKET c_socket, char * nickname) {
+int pushClient(int roomNum, SOCKET c_socket, char* nickname) {
 	//ADD c_socket to list_c array.
 	//
 	///////////////////////////////
@@ -302,7 +278,7 @@ int pushClient(int roomNum, SOCKET c_socket, char * nickname) {
 	//return the index of list_c which c_socket is added.
 	int i;
 	for (i = 0; i < MAX_CLIENT; i++) {//puch into free room
-		if (list_c[roomNum][i].socket == INVALID_SOCK || ( strstr(list_c[roomNum][i].nickname, nickname))) {
+		if (list_c[roomNum][i].socket == INVALID_SOCK || (strstr(list_c[roomNum][i].nickname, nickname))) {
 			//if dialog exist or we found free place
 			list_c[roomNum][i].socket = c_socket;
 			strcpy(list_c[roomNum][i].nickname, nickname);
