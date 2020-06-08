@@ -59,6 +59,7 @@ char clear_history[] = "Sorry, no previous messages. Start chattering right now\
 char notification[] = " send you a message\n";
 char one_client[] = "===Your are alone, don't worry, please,wait===\n";
 char list[] = "===Here list of our clients:===\n";
+char end[] = "--------------------------------------------\n";
 
 
 int main(int argc, char* argv[])
@@ -113,7 +114,7 @@ int main(int argc, char* argv[])
 
 		memset(password, 0, sizeof(password));
 		recv(c_socket, password, sizeof(password), 0);
-		printf("%s %s\n", nickname, password);
+		//printf("%s %s\n", nickname, password);
 
 		int res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
 		if (res < 0) { //
@@ -121,6 +122,7 @@ int main(int argc, char* argv[])
 			closesocket(c_socket);
 		}
 		else {
+			printf(" name = %s, passowrd = %s, cli_cpount = %d\n", nickname, password, cli_count);
 			send(c_socket, greeting, sizeof(greeting), 0);//welcome mess
 			pthread_create(&thread, NULL, do_chat, (void*)(cli_count - 1));
 		}
@@ -144,7 +146,7 @@ void* find_mate_box(char* name) {
 	char* istr;
 	istr = strtok(name, ":");
 	istr = strtok(NULL, "\0");
-	printf("%s %s",name, istr);
+	//printf("%s %s",name, istr);
 	for (int i = 0; i < MAX_CLIENT; i++) {
 		if (strstr(istr, list_c[i][0].nickname)) {
 			return i;
@@ -188,16 +190,19 @@ void* do_chat(void* arg)
 	while (1) {
 		if (cli_count != 1) {
 			memset(mate_name, 0, sizeof(mate_name));
-
+			Sleep(100);
+			printf("%s\n", list);
 			send(c_socket, list, sizeof(list), 0);
 			Sleep(100);//we need pause to clean console
 			print_cleints(c_socket);//print all clients except user
 			send(c_socket, start_mess, sizeof(start_mess), 0);//send "view dialog with "
+			printf("%s\n", start_mess);
 			recv(c_socket, mate_name, sizeof(mate_name), 0);//recv name
+			printf("mate - name %s\n", mate_name);
 			if (strstr(mate_name, escape) == NULL) {// if user do not want to leave
 
 				int mate_num_box = find_mate_box(mate_name);// res = number of mate_box
-
+				printf("%d",mate_num_box);
 				if (mate_num_box >= 0) {//if we found mate
 					i = pushClient(room, c_socket, list_c[mate_num_box][0].nickname);
 					j = pushClient(mate_num_box, c_socket, list_c[room][0].nickname);
@@ -218,6 +223,9 @@ void* do_chat(void* arg)
 							memset(chatData, 0, sizeof(chatData));
 
 							print_history(i, room);//print previous mess
+							printf("ok");
+							Sleep(100);
+							send(c_socket, end, sizeof(end), 0);
 							n = recv(c_socket, chatData, sizeof(chatData), 0);
 
 							//3 options
@@ -290,3 +298,7 @@ int pushClient(int roomNum, SOCKET c_socket, char* nickname) {
 	}
 	return i; // list_c index.
 }
+
+
+
+
