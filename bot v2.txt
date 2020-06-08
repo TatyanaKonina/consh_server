@@ -17,9 +17,11 @@ void* chat_bot(void* arg)
 				memset(chatData, '\0', sizeof(chatData));
 				memset(buf, '\0', sizeof(buf));
 				if (sent) {
-					send(c_socket, escape, strlen(escape),0);
+					sprintf(chatData, "%s: %s", nickname, escape);
+					send(c_socket, chatData, strlen(chatData),0);
 					flag = 0;
 					pointer = 0;
+					sent = 0;
 				}
 				else {
 					sprintf(buf, data[rand() % word_line]);
