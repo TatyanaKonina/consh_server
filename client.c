@@ -1,4 +1,5 @@
 
+
 #pragma comment(lib, "ws2_32.lib")
 
 #define _CRT_SECURE_NO_WARNINGS
@@ -183,6 +184,8 @@ void* do_receive_chat(void* arg)
         }
     }
 }
+
+
 void str(char* arr, int length) {
     int i;
     for (i = 0; i < length; i++) { // trim \n
@@ -234,7 +237,6 @@ int words_num_in_file(char* file_name) {
 
 void* chat_bot(void* arg)
 {
-
     char bot_buf[MAX_CLIENT][CHATDATA];
     char chatData[CHATDATA];
     int n = 0, pointer = 0, flag = 0;
@@ -243,71 +245,72 @@ void* chat_bot(void* arg)
     int word_line = words_num_in_file(file_name);
     char** data = read_data(file_name, word_line);
     int random = 0;
+    int sent = 0;
     srand(time(0));
     SOCKET c_socket = *(SOCKET*)arg;        // bot socket
     while (1) {
         memset(chatData, 0, sizeof(chatData));
-        
         if ((n = recv(c_socket, chatData, sizeof(chatData), 0)) > 0) {
- 
-            //printf("1 = %s\n", chatData);
             if (strstr(chatData, end) != NULL) {
                 printf("%s", chatData);
-                pointer = 0;
-                flag = 0;
+                Sleep(100);
                 memset(chatData, '\0', sizeof(chatData));
                 memset(buf, '\0', sizeof(buf));
-
-                sprintf(buf, data[rand() % word_line]);
-
-                str(buf, CHATDATA);
-                Sleep(4000);
-                sprintf(chatData, "%s: %s", nickname, buf);
-                send(c_socket, chatData, strlen(chatData), 0);
-                Sleep(1000);
-                send(c_socket, escape, strlen(escape), 0);
+                if (sent) {
+                    sent = 0;
+                    Sleep(3000);
+                    sprintf(chatData, "%s: %s", nickname, escape);
+                    send(c_socket, chatData, strlen(chatData), 0);
+                }
+                else {
+                      sprintf(buf, data[rand() % word_line]);
+                      //printf("lll %s", data[rand() % word_line]);
+                      str(buf, CHATDATA);
+                      sprintf(chatData, "%s: %s", nickname, buf);
+                      Sleep(4000);
+                      send(c_socket, chatData, strlen(chatData), 0);
+                      
+                      sent = 0;
+                      flag = 0;
+                      pointer = 0;
+                }
             }
             else {
-                //Sleep(2000);
-                if (strstr(chatData, list) || strstr(chatData, dialog)) {// client want to update screen
-                    printf("\ncleen\n");
-                    flag = 0;
-                    //system("cls");
-                    Sleep(100);
-                }
-                printf("%s", chatData);
-                if (flag && !strstr(chatData, start_mess) && !strstr(chatData,one_client )) {
-                    str(chatData, strlen(chatData));
-                   // printf("ok %s",chatData);
+                 if (flag && !strstr(chatData,start_mess)) {
+            
                     strcpy(bot_buf[pointer++], chatData);
-                }
-                if (strstr(chatData, list)) {
+                    /*for (int i = 0; i < pointer; i++) {
+                        printf("%d %s\n",i, bot_buf[i]);
+                    }*/
+                 }
+
+                if (strstr(chatData, list)) {// client want to update screen
                     pointer = 0;
                     flag = 1;
+                    printf("cleen\n");
+                    system("cls");
                 }
                 //printPony();
+                printf("%s", chatData);
                 
-                
-                if (strstr(chatData, notification) && flag_bot == 0) {
-                    Sleep(4000);
-                    for (int i = 0; i < strlen(chatData); i++) { //clean notification
+                if (strstr(chatData, notification)) {
+                    Sleep(3000);
+                    for (int i = 0; i < strlen(chatData); i++) {//clean notification
                         printf("\b \b");
                     }
                     send(c_socket, update, sizeof(update), 0);
                 }
-
                 if (strstr(chatData, start_mess)) { //delete aaa
-                    //printf("%s",bot_buf[0]);
-                    memset(chatData, '\0', sizeof(chatData));
+                    flag = 0;
+                    printf("%s\n", bot_buf[random]);
                     random = rand() % (pointer);
-                    //printf(" p= %d %d", pointer,random);
-                    Sleep(3000);
+                    memset(chatData, 0, sizeof(chatData));
                     sprintf(chatData, "%s: %s", nickname, bot_buf[random]);
-                    printf("%s", bot_buf[random]);
+                    Sleep(3000);
                     send(c_socket, chatData, sizeof(chatData), 0);
                 }
-                
             }
         }
+
     }
 }
