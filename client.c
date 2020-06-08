@@ -6,9 +6,9 @@
 #include <winsock.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include<pthread.h>
+#include <pthread.h>
 #include <signal.h>
-#include<string.h>
+#include <string.h>
 #include <windows.h>
 
 #define LENGTH 2048
@@ -25,7 +25,7 @@
 #define LEF 222
 #define DOW 220
 #define UP 223
-#define X 96
+#define X 95
 #define HEIGHT 12
 #define WIDTH 23
 
@@ -51,20 +51,12 @@ int words_num_in_file(char* file_name);
 void printPony();
 
 pthread_t thread_1, thread_2;
-char first_mess[] = "Hello, dear Hacker! Who do you want to be today?\n1/Im bot.\n2.I aM nOt A bOt TrUsT mE\n";
-char one_client[] = "===Your are alone, don't worry, please,wait===\n";
-char write_name[] = "Input name: ";
-char dialog[CHATDATA] = "===Dialog with ";
-char list[] = "Here list of our clients";
-char    greeting[] = "=== WELCOME TO MY LIITLE SERVER ===\n";
-char notification[] = " send you a message";
-char write_pass[] = "Write password:";
-char update[] = "reload";
-char    escape[] = "exit";
-char start_mess[] = "View dialog with ->";
-char end[] = "--------------------------------------------";
-const char    nickname[NICK_LEN];
-char password[NICK_LEN];
+const char dialog[CHATDATA] = "===Dialog with ";
+const char list[] = "Here list of our clients";
+const char notification[] = " send you a message";
+const char update[] = "reload";
+const char escape[] = "exit";
+char nickname[NICK_LEN];
 int flag_bot = 0;
 
 int main(int argc, char* argv[])
@@ -83,6 +75,7 @@ int main(int argc, char* argv[])
     int nfds;
     fd_set read_fds;
     int n;
+	char password[NICK_LEN];
     c_socket = socket(PF_INET, SOCK_STREAM, 0);
     c_addr.sin_addr.S_un.S_addr = inet_addr(IPADDR);
     c_addr.sin_family = AF_INET;
@@ -98,9 +91,9 @@ int main(int argc, char* argv[])
     char passwords[] = "bot_passwords.txt";
     printPony();
 
-    printf(greeting);// welcome mess
+    printf("=== WELCOME TO MY LIITLE SERVER ===\n");
 
-    printf(first_mess);
+    printf("Hello, dear Hacker! Who do you want to be today?\n1/Im bot.\n2.I aM nOt A bOt TrUsT mE\n");
 
     fgets(chatData, CHATDATA, stdin);
     fflush(stdin);
@@ -120,10 +113,10 @@ int main(int argc, char* argv[])
         flag_bot = 1;
     }
     else {
-        printf(write_name);
+        printf("Input name: ");
         fgets(nickname, NICK_LEN, stdin);
         fflush(stdin);
-        printf(write_pass);
+        printf("Write password: ");
         fgets(password, NICK_LEN, stdin);
         fflush(stdin);
     }
@@ -200,7 +193,6 @@ void* do_receive_chat(void* arg)
             }
             
             printf("%s", chatData);
-           
             
             if (strstr(chatData, notification)) {
                 Sleep(3000);
@@ -266,8 +258,8 @@ void printPony()
     HANDLE nConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     int i = 0;
 
-    for (i = 0; i < 12; i++) {
-        COORD coord = { 95, i };
+    for (i = 0; i < HEIGHT; i++) {
+        COORD coord = { X, i };
         SetConsoleCursorPosition(nConsole, coord);
         printf("%s",(pony[i]));
     }
