@@ -32,6 +32,8 @@ void printPony()
 		SetConsoleCursorPosition(nConsole, coord);
 		puts(pony[i]);
 	}
+	COORD coord = {0, 0};
+	SetConsoleCursorPosition(nConsole, coord);
 
 	return;
 }
