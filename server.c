@@ -1,4 +1,3 @@
-
 #define _CRT_SECURE_NO_WARNINGS
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
@@ -13,9 +12,9 @@ void* do_chat(void* arg);
 
 int pushClient(int roomNum, SOCKET c_socket, char* nickname);
 
-void* print_cleints(SOCKET soket_client);
+void* printClients(SOCKET soket_client);
 
-int* find_mate_box(char* name);
+int find_mate_box(char* name);
 
 void str(char* arr, int length);
 
@@ -47,20 +46,6 @@ int cli_count = 0;
 
 guest list_c[MAX_CLIENT][MAX_CLIENT];
 
-char dialog[CHATDATA] = "===Dialog with ";
-char    escape[] = "exit";
-char    greeting[] = "=== WELCOME TO THE CHATROOM ===\n";
-char start_mess[] = "View dialog with ->";
-char    CODE200[] = "Sorry No More Connection\n";
-char	neUser[] = "This is Not User\n";
-char	denied[] = "Sorry, assess denied\n";
-char update[] = "reload";
-char clear_history[] = "Sorry, no previous messages. Start chattering right now\n";
-char notification[] = " send you a message\n";
-char one_client[] = "===Your are alone, don't worry, please,wait===\n";
-char list[] = "===Here list of our clients:===\n";
-char end[] = "--------------------------------------------\n";
-
 
 int main(int argc, char* argv[])
 {
@@ -77,6 +62,8 @@ int main(int argc, char* argv[])
 	int    res;
 	char nickname[20];
 	char password[MAX_LEN];
+	char greeting[] = "=== WELCOME TO THE CHATROOM ===\n";
+	char denied[] = "Sorry, assess denied\n";
 	char roomNum[3]; int r_Num;
 	if (pthread_mutex_init(&mutex, NULL) != 0) {
 		printf("Can not create mutex\n");
@@ -118,7 +105,7 @@ int main(int argc, char* argv[])
 
 		int res = pushClient(cli_count - 1, c_socket, nickname);// push socket into room box
 		if (res < 0) { //
-			send(c_socket, denied, strlen(CODE200), 0);
+			send(c_socket, denied, strlen(denied), 0);
 			closesocket(c_socket);
 		}
 		else {
@@ -130,7 +117,7 @@ int main(int argc, char* argv[])
 	}
 }
 
-void* print_cleints(SOCKET soket_client) {
+void* printClients(SOCKET soket_client) {
 	char mess[CHATDATA];
 	for (int i = 0; i < MAX_CLIENT; i++) {
 		if (soket_client != list_c[i][0].socket && list_c[i][0].socket != INVALID_SOCK) {//print all except client
@@ -139,10 +126,11 @@ void* print_cleints(SOCKET soket_client) {
 			send(soket_client, mess, sizeof(mess), 0);
 		}
 	}
+	return (void*)0;
 }
 
 
-int* find_mate_box(char* name) {
+int find_mate_box(char* name) {
 	//return i if nick_name exist 
 	//return -1 if no match 
 	char* istr;
@@ -159,12 +147,14 @@ int* find_mate_box(char* name) {
 void* print_history(int room_mate, int room_client) {
 
 	int lst_mess = list_c[room_client][room_mate].last_mess;
+	char clear_history[] = "Sorry, no previous messages. Start chattering right now\n";
 	if (lst_mess == 0) {
 		send(list_c[room_client][0].socket, clear_history, sizeof(clear_history), 0);// no history print mess
 	}
 	for (int i = 0; i < lst_mess; i++) {
 		send(list_c[room_client][0].socket, list_c[room_client][room_mate].history[i], sizeof(list_c[room_client][room_mate].history[i]), 0);
 	}
+	return (void*)0;
 }
 
 void str(char* arr, int length) {
@@ -186,6 +176,14 @@ void* do_chat(void* arg)
 	char mate_name[MAX_LEN];
 	char chatData[CHATDATA];
 	char buffer[CHATDATA];
+	char escape[] = "exit";
+	char start_mess[] = "View dialog with ->";
+	char neUser[] = "This is Not User\n";
+	char update[] = "reload";
+	char notification[] = " send you a message\n";
+	char one_client[] = "===Your are alone, don't worry, please,wait===\n";
+	char list[] = "===Here list of our clients:===\n";
+	char end[] = "--------------------------------------------\n";
 
 	int i = 0, j = 0, n = 0;
 	while (1) {
@@ -194,7 +192,7 @@ void* do_chat(void* arg)
 
 			send(c_socket, list, sizeof(list), 0);
 			Sleep(100);//we need pause to clean console
-			print_cleints(c_socket);//print all clients except user
+			printClients(c_socket);//print all clients except user
 			send(c_socket, start_mess, sizeof(start_mess), 0);//send "view dialog with "
 			recv(c_socket, mate_name, sizeof(mate_name), 0);//recv name
 			if (strstr(mate_name, escape) == NULL) {// if user do not want to leave
@@ -212,7 +210,7 @@ void* do_chat(void* arg)
 						while (1) {
 							//print history
 							memset(buffer, 0, sizeof(buffer));//dialog icon
-							strcpy(buffer, dialog);
+							strcpy(buffer, "===Dialog with ");
 							strcat(buffer, list_c[mate_num_box][0].nickname);
 							strcat(buffer, "===\n");
 
@@ -273,6 +271,7 @@ void* do_chat(void* arg)
 			Sleep(10000);
 		}
 	}
+	return (void*)0;
 }
 
 int pushClient(int roomNum, SOCKET c_socket, char* nickname) {
@@ -295,5 +294,3 @@ int pushClient(int roomNum, SOCKET c_socket, char* nickname) {
 	}
 	return i; // list_c index.
 }
-
-
