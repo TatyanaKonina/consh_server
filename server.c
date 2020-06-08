@@ -1,4 +1,4 @@
-//#include "pch.h"
+/#include "pch.h"
 #define _CRT_SECURE_NO_WARNINGS
 #define HAVE_STRUCT_TIMESPEC
 #include <pthread.h>
@@ -15,7 +15,7 @@ int pushClient(int roomNum, SOCKET c_socket, char* nickname);
 
 void* print_cleints(SOCKET soket_client);
 
-void* find_mate_box(char* name);
+int* find_mate_box(char* name);
 
 void str(char* arr, int length);
 
@@ -140,13 +140,13 @@ void* print_cleints(SOCKET soket_client) {
 	}
 }
 
-void* find_mate_box(char* name) {
+
+int* find_mate_box(char* name) {
 	//return i if nick_name exist 
 	//return -1 if no match 
 	char* istr;
 	istr = strtok(name, ":");
 	istr = strtok(NULL, "\0");
-	//printf("%s %s",name, istr);
 	for (int i = 0; i < MAX_CLIENT; i++) {
 		if (strstr(istr, list_c[i][0].nickname)) {
 			return i;
@@ -182,7 +182,7 @@ void* do_chat(void* arg)
 
 	SOCKET c_socket = list_c[room][0].socket;
 
-	char mate_name[CHATDATA];
+	char mate_name[MAX_LEN];
 	char chatData[CHATDATA];
 	char buffer[CHATDATA];
 
@@ -190,19 +190,16 @@ void* do_chat(void* arg)
 	while (1) {
 		if (cli_count != 1) {
 			memset(mate_name, 0, sizeof(mate_name));
-			Sleep(100);
-			printf("%s\n", list);
+
 			send(c_socket, list, sizeof(list), 0);
 			Sleep(100);//we need pause to clean console
 			print_cleints(c_socket);//print all clients except user
 			send(c_socket, start_mess, sizeof(start_mess), 0);//send "view dialog with "
-			printf("%s\n", start_mess);
 			recv(c_socket, mate_name, sizeof(mate_name), 0);//recv name
-			printf("mate - name %s\n", mate_name);
 			if (strstr(mate_name, escape) == NULL) {// if user do not want to leave
 
 				int mate_num_box = find_mate_box(mate_name);// res = number of mate_box
-				printf("%d",mate_num_box);
+
 				if (mate_num_box >= 0) {//if we found mate
 					i = pushClient(room, c_socket, list_c[mate_num_box][0].nickname);
 					j = pushClient(mate_num_box, c_socket, list_c[room][0].nickname);
@@ -223,7 +220,6 @@ void* do_chat(void* arg)
 							memset(chatData, 0, sizeof(chatData));
 
 							print_history(i, room);//print previous mess
-							printf("ok");
 							Sleep(100);
 							send(c_socket, end, sizeof(end), 0);
 							n = recv(c_socket, chatData, sizeof(chatData), 0);
@@ -298,6 +294,7 @@ int pushClient(int roomNum, SOCKET c_socket, char* nickname) {
 	}
 	return i; // list_c index.
 }
+
 
 
 
